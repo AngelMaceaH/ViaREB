@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: viareb-postgres-develop
+    restart: unless-stopped
+    ports:
+      # Use a host port that is not taken by local Postgres or other containers (5432/5433 are often busy).
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: viareb
+      POSTGRES_PASSWORD: viareb_local
+      POSTGRES_DB: viareb
+    volumes:
+      - viareb_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  viareb_postgres_data:

@@ -1,0 +1,204 @@
+// ViaREB — bus ticket sales and validation (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Access control (users, roles, permissions) ---
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  userRoles UserRole[]
+  sales     Sale[]     @relation("SaleSoldByUser")
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId String @map("user_id")
+  roleId String @map("role_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// --- Fleet and operations ---
+
+model Bus {
+  id            String   @id @default(cuid())
+  licensePlate  String   @unique @map("license_plate")
+  capacity      Int
+  modelName     String?  @map("model_name")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  schedules Schedule[]
+
+  @@map("buses")
+}
+
+model Route {
+  id                String   @id @default(cuid())
+  name              String
+  origin            String
+  destination       String
+  distanceKilometers Decimal? @map("distance_kilometers") @db.Decimal(8, 2)
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  schedules Schedule[]
+
+  @@map("routes")
+}
+
+model Driver {
+  id            String   @id @default(cuid())
+  fullName      String   @map("full_name")
+  licenseNumber String   @unique @map("license_number")
+  phoneNumber   String?  @map("phone_number")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  schedules Schedule[]
+
+  @@map("drivers")
+}
+
+model Schedule {
+  id            String    @id @default(cuid())
+  routeId       String    @map("route_id")
+  busId         String    @map("bus_id")
+  driverId      String    @map("driver_id")
+  departureAt   DateTime  @map("departure_at")
+  arrivalAt     DateTime? @map("arrival_at")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  route   Route    @relation(fields: [routeId], references: [id], onDelete: Restrict)
+  bus     Bus      @relation(fields: [busId], references: [id], onDelete: Restrict)
+  driver  Driver   @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  tickets Ticket[]
+
+  @@index([routeId, departureAt])
+  @@map("schedules")
+}
+
+model Passenger {
+  id             String   @id @default(cuid())
+  fullName       String   @map("full_name")
+  documentNumber String   @unique @map("document_number")
+  email          String?
+  phoneNumber    String?  @map("phone_number")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tickets Ticket[]
+  sales   Sale[]
+
+  @@map("passengers")
+}
+
+// --- Sales and tickets ---
+
+model Sale {
+  id              String   @id @default(cuid())
+  soldByUserId    String   @map("sold_by_user_id")
+  passengerId     String?  @map("passenger_id")
+  totalAmount     Decimal  @map("total_amount") @db.Decimal(10, 2)
+  soldAt          DateTime @default(now()) @map("sold_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  soldBy    User       @relation("SaleSoldByUser", fields: [soldByUserId], references: [id], onDelete: Restrict)
+  passenger Passenger? @relation(fields: [passengerId], references: [id], onDelete: SetNull)
+  tickets   Ticket[]
+
+  @@index([soldAt])
+  @@map("sales")
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  CANCELLED
+  EXPIRED
+}
+
+model Ticket {
+  id          String       @id @default(cuid())
+  saleId      String       @map("sale_id")
+  scheduleId  String       @map("schedule_id")
+  passengerId String       @map("passenger_id")
+  seatNumber  Int?         @map("seat_number")
+  price       Decimal      @db.Decimal(10, 2)
+  status      TicketStatus @default(VALID)
+  ticketCode  String       @unique @default(cuid()) @map("ticket_code")
+  validatedAt DateTime?    @map("validated_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  sale      Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  schedule  Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  passenger Passenger @relation(fields: [passengerId], references: [id], onDelete: Restrict)
+
+  @@index([scheduleId, seatNumber])
+  @@map("tickets")
+}
