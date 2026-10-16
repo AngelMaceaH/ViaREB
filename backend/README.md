@@ -2,7 +2,17 @@
 
 Node.js API (Fastify) with PostgreSQL and Prisma.
 
-## Prerequisites
+## Run with Docker (whole stack)
+
+From the **repository root**:
+
+```bash
+docker compose up -d --build
+```
+
+See the root `README.md` for URLs and team instructions.
+
+## Prerequisites (local Node development)
 
 - Node.js 20+
 - Docker Desktop (recommended for local PostgreSQL)
@@ -41,10 +51,11 @@ Node.js API (Fastify) with PostgreSQL and Prisma.
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev` | API with nodemon |
+| `npm run dev` | API with Node watch mode (hot reload) |
 | `npm run db:migrate` | Create/apply migrations in development |
 | `npm run db:studio` | Prisma Studio UI |
 
 ## API
 
 - `GET /api/health` — API and database connectivity check
+- `GET /docs` — Swagger UI (OpenAPI)

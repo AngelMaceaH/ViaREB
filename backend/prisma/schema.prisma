@@ -1,4 +1,4 @@
-// ViaREB — bus ticket sales and validation (PostgreSQL)
+// ViaREB — bus ticket sales and validation (PostgreSQL, multi-schema)
 
 generator client {
   provider = "prisma-client-js"
@@ -6,10 +6,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  schemas  = ["access", "fleet", "customer", "sales"]
 }
 
-// --- Access control (users, roles, permissions) ---
+// --- Schema: access (users, roles, permissions) ---
 
 model User {
   id           String   @id @default(cuid())
@@ -24,6 +24,7 @@ model User {
   sales     Sale[]     @relation("SaleSoldByUser")
 
   @@map("users")
+  @@schema("access")
 }
 
 model Role {
@@ -37,6 +38,7 @@ model Role {
   userRoles       UserRole[]
 
   @@map("roles")
+  @@schema("access")
 }
 
 model Permission {
@@ -50,6 +52,7 @@ model Permission {
   rolePermissions RolePermission[]
 
   @@map("permissions")
+  @@schema("access")
 }
 
 model RolePermission {
@@ -61,6 +64,7 @@ model RolePermission {
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
+  @@schema("access")
 }
 
 model UserRole {
@@ -74,37 +78,40 @@ model UserRole {
 
   @@id([userId, roleId])
   @@map("user_roles")
+  @@schema("access")
 }
 
-// --- Fleet and operations ---
+// --- Schema: fleet (buses, routes, drivers, schedules) ---
 
 model Bus {
-  id            String   @id @default(cuid())
-  licensePlate  String   @unique @map("license_plate")
-  capacity      Int
-  modelName     String?  @map("model_name")
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(cuid())
+  licensePlate String   @unique @map("license_plate")
+  capacity     Int
+  modelName    String?  @map("model_name")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   schedules Schedule[]
 
   @@map("buses")
+  @@schema("fleet")
 }
 
 model Route {
-  id                String   @id @default(cuid())
-  name              String
-  origin            String
-  destination       String
+  id                 String   @id @default(cuid())
+  name               String
+  origin             String
+  destination        String
   distanceKilometers Decimal? @map("distance_kilometers") @db.Decimal(8, 2)
-  isActive          Boolean  @default(true) @map("is_active")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   schedules Schedule[]
 
   @@map("routes")
+  @@schema("fleet")
 }
 
 model Driver {
@@ -119,18 +126,19 @@ model Driver {
   schedules Schedule[]
 
   @@map("drivers")
+  @@schema("fleet")
 }
 
 model Schedule {
-  id            String    @id @default(cuid())
-  routeId       String    @map("route_id")
-  busId         String    @map("bus_id")
-  driverId      String    @map("driver_id")
-  departureAt   DateTime  @map("departure_at")
-  arrivalAt     DateTime? @map("arrival_at")
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id          String    @id @default(cuid())
+  routeId     String    @map("route_id")
+  busId       String    @map("bus_id")
+  driverId    String    @map("driver_id")
+  departureAt DateTime  @map("departure_at")
+  arrivalAt   DateTime? @map("arrival_at")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   route   Route    @relation(fields: [routeId], references: [id], onDelete: Restrict)
   bus     Bus      @relation(fields: [busId], references: [id], onDelete: Restrict)
@@ -139,7 +147,10 @@ model Schedule {
 
   @@index([routeId, departureAt])
   @@map("schedules")
+  @@schema("fleet")
 }
+
+// --- Schema: customer (passengers) ---
 
 model Passenger {
   id             String   @id @default(cuid())
@@ -154,18 +165,19 @@ model Passenger {
   sales   Sale[]
 
   @@map("passengers")
+  @@schema("customer")
 }
 
-// --- Sales and tickets ---
+// --- Schema: sales (sales and tickets) ---
 
 model Sale {
-  id              String   @id @default(cuid())
-  soldByUserId    String   @map("sold_by_user_id")
-  passengerId     String?  @map("passenger_id")
-  totalAmount     Decimal  @map("total_amount") @db.Decimal(10, 2)
-  soldAt          DateTime @default(now()) @map("sold_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(cuid())
+  soldByUserId String   @map("sold_by_user_id")
+  passengerId  String?  @map("passenger_id")
+  totalAmount  Decimal  @map("total_amount") @db.Decimal(10, 2)
+  soldAt       DateTime @default(now()) @map("sold_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   soldBy    User       @relation("SaleSoldByUser", fields: [soldByUserId], references: [id], onDelete: Restrict)
   passenger Passenger? @relation(fields: [passengerId], references: [id], onDelete: SetNull)
@@ -173,6 +185,7 @@ model Sale {
 
   @@index([soldAt])
   @@map("sales")
+  @@schema("sales")
 }
 
 enum TicketStatus {
@@ -180,6 +193,8 @@ enum TicketStatus {
   USED
   CANCELLED
   EXPIRED
+
+  @@schema("sales")
 }
 
 model Ticket {
@@ -201,4 +216,5 @@ model Ticket {
 
   @@index([scheduleId, seatNumber])
   @@map("tickets")
+  @@schema("sales")
 }

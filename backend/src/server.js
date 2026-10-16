@@ -1,7 +1,12 @@
-const Fastify = require('fastify');
-const cors = require('@fastify/cors');
-const envPlugin = require('@fastify/env');
-const { prismaClient } = require('./infrastructure/database/prisma_client');
+const Fastify = require('fastify')
+const cors = require('@fastify/cors')
+const envPlugin = require('@fastify/env')
+const {
+  createPrismaClient,
+  disconnectPrismaClient,
+  getPrismaClient,
+} = require('./infrastructure/database/prisma_client')
+const { registerOpenApi } = require('./infrastructure/openapi/register_openapi')
 
 const environmentSchema = {
   type: 'object',
@@ -9,50 +14,75 @@ const environmentSchema = {
   properties: {
     DATABASE_URL: { type: 'string' },
     NODE_ENV: { type: 'string', default: 'development' },
-    PORT: { type: 'string', default: '3000' },
+    PORT: { type: 'string', default: '8000' },
     CORS_ORIGIN: { type: 'string', default: 'http://localhost:5173' },
   },
-};
+}
 
 const application = Fastify({
   logger: true,
-});
+})
 
 async function start() {
   await application.register(envPlugin, {
     schema: environmentSchema,
     dotenv: true,
-  });
+  })
+
+  createPrismaClient(application.config.DATABASE_URL)
 
   await application.register(cors, {
     origin: application.config.CORS_ORIGIN,
-  });
+  })
 
-  application.get('/api/health', async () => {
-    await prismaClient.$queryRaw`SELECT 1`;
+  const serverPort = Number(application.config.PORT)
+
+  await registerOpenApi(application, {
+    serverPort,
+    serverUrl: `http://localhost:${serverPort}`,
+  })
+
+  application.get('/api/health', {
+    schema: {
+      tags: ['System'],
+      summary: 'Health check',
+      description: 'Verifies API availability and database connectivity.',
+      response: {
+        200: {
+          type: 'object',
+          required: ['status', 'message', 'database'],
+          properties: {
+            status: { type: 'string', example: 'ok' },
+            message: { type: 'string', example: 'ViaREB API is running' },
+            database: { type: 'string', example: 'connected' },
+          },
+        },
+      },
+    },
+  }, async () => {
+    const prismaClient = getPrismaClient()
+    await prismaClient.$queryRaw`SELECT 1`
 
     return {
       status: 'ok',
       message: 'ViaREB API is running',
       database: 'connected',
-    };
-  });
+    }
+  })
 
   application.addHook('onClose', async () => {
-    await prismaClient.$disconnect();
-  });
+    await disconnectPrismaClient()
+  })
 
   try {
-    const port = Number(application.config.PORT);
-
     await application.listen({
-      port,
+      port: serverPort,
       host: '0.0.0.0',
-    });
+    })
   } catch (error) {
-    application.log.error(error);
-    process.exit(1);
+    application.log.error(error)
+    process.exit(1)
   }
 }
 
-start();
+start()

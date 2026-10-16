@@ -1,11 +1,20 @@
 -- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
+CREATE SCHEMA IF NOT EXISTS "access";
+
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "customer";
+
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "fleet";
+
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "sales";
 
 -- CreateEnum
-CREATE TYPE "TicketStatus" AS ENUM ('VALID', 'USED', 'CANCELLED', 'EXPIRED');
+CREATE TYPE "sales"."TicketStatus" AS ENUM ('VALID', 'USED', 'CANCELLED', 'EXPIRED');
 
 -- CreateTable
-CREATE TABLE "users" (
+CREATE TABLE "access"."users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password_hash" TEXT NOT NULL,
@@ -18,7 +27,7 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
-CREATE TABLE "roles" (
+CREATE TABLE "access"."roles" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -29,7 +38,7 @@ CREATE TABLE "roles" (
 );
 
 -- CreateTable
-CREATE TABLE "permissions" (
+CREATE TABLE "access"."permissions" (
     "id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -41,7 +50,7 @@ CREATE TABLE "permissions" (
 );
 
 -- CreateTable
-CREATE TABLE "role_permissions" (
+CREATE TABLE "access"."role_permissions" (
     "role_id" TEXT NOT NULL,
     "permission_id" TEXT NOT NULL,
 
@@ -49,7 +58,7 @@ CREATE TABLE "role_permissions" (
 );
 
 -- CreateTable
-CREATE TABLE "user_roles" (
+CREATE TABLE "access"."user_roles" (
     "user_id" TEXT NOT NULL,
     "role_id" TEXT NOT NULL,
     "assigned_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -58,7 +67,7 @@ CREATE TABLE "user_roles" (
 );
 
 -- CreateTable
-CREATE TABLE "buses" (
+CREATE TABLE "fleet"."buses" (
     "id" TEXT NOT NULL,
     "license_plate" TEXT NOT NULL,
     "capacity" INTEGER NOT NULL,
@@ -71,7 +80,7 @@ CREATE TABLE "buses" (
 );
 
 -- CreateTable
-CREATE TABLE "routes" (
+CREATE TABLE "fleet"."routes" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "origin" TEXT NOT NULL,
@@ -85,7 +94,7 @@ CREATE TABLE "routes" (
 );
 
 -- CreateTable
-CREATE TABLE "drivers" (
+CREATE TABLE "fleet"."drivers" (
     "id" TEXT NOT NULL,
     "full_name" TEXT NOT NULL,
     "license_number" TEXT NOT NULL,
@@ -98,7 +107,7 @@ CREATE TABLE "drivers" (
 );
 
 -- CreateTable
-CREATE TABLE "schedules" (
+CREATE TABLE "fleet"."schedules" (
     "id" TEXT NOT NULL,
     "route_id" TEXT NOT NULL,
     "bus_id" TEXT NOT NULL,
@@ -113,7 +122,7 @@ CREATE TABLE "schedules" (
 );
 
 -- CreateTable
-CREATE TABLE "passengers" (
+CREATE TABLE "customer"."passengers" (
     "id" TEXT NOT NULL,
     "full_name" TEXT NOT NULL,
     "document_number" TEXT NOT NULL,
@@ -126,7 +135,7 @@ CREATE TABLE "passengers" (
 );
 
 -- CreateTable
-CREATE TABLE "sales" (
+CREATE TABLE "sales"."sales" (
     "id" TEXT NOT NULL,
     "sold_by_user_id" TEXT NOT NULL,
     "passenger_id" TEXT,
@@ -139,14 +148,14 @@ CREATE TABLE "sales" (
 );
 
 -- CreateTable
-CREATE TABLE "tickets" (
+CREATE TABLE "sales"."tickets" (
     "id" TEXT NOT NULL,
     "sale_id" TEXT NOT NULL,
     "schedule_id" TEXT NOT NULL,
     "passenger_id" TEXT NOT NULL,
     "seat_number" INTEGER,
     "price" DECIMAL(10,2) NOT NULL,
-    "status" "TicketStatus" NOT NULL DEFAULT 'VALID',
+    "status" "sales"."TicketStatus" NOT NULL DEFAULT 'VALID',
     "ticket_code" TEXT NOT NULL,
     "validated_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -156,67 +165,67 @@ CREATE TABLE "tickets" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+CREATE UNIQUE INDEX "users_email_key" ON "access"."users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
+CREATE UNIQUE INDEX "roles_name_key" ON "access"."roles"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "permissions_code_key" ON "permissions"("code");
+CREATE UNIQUE INDEX "permissions_code_key" ON "access"."permissions"("code");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "buses_license_plate_key" ON "buses"("license_plate");
+CREATE UNIQUE INDEX "buses_license_plate_key" ON "fleet"."buses"("license_plate");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "drivers_license_number_key" ON "drivers"("license_number");
+CREATE UNIQUE INDEX "drivers_license_number_key" ON "fleet"."drivers"("license_number");
 
 -- CreateIndex
-CREATE INDEX "schedules_route_id_departure_at_idx" ON "schedules"("route_id", "departure_at");
+CREATE INDEX "schedules_route_id_departure_at_idx" ON "fleet"."schedules"("route_id", "departure_at");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "passengers_document_number_key" ON "passengers"("document_number");
+CREATE UNIQUE INDEX "passengers_document_number_key" ON "customer"."passengers"("document_number");
 
 -- CreateIndex
-CREATE INDEX "sales_sold_at_idx" ON "sales"("sold_at");
+CREATE INDEX "sales_sold_at_idx" ON "sales"."sales"("sold_at");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "tickets_ticket_code_key" ON "tickets"("ticket_code");
+CREATE UNIQUE INDEX "tickets_ticket_code_key" ON "sales"."tickets"("ticket_code");
 
 -- CreateIndex
-CREATE INDEX "tickets_schedule_id_seat_number_idx" ON "tickets"("schedule_id", "seat_number");
+CREATE INDEX "tickets_schedule_id_seat_number_idx" ON "sales"."tickets"("schedule_id", "seat_number");
 
 -- AddForeignKey
-ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "access"."role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "access"."roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "access"."role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "access"."permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "access"."user_roles" ADD CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "access"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "access"."user_roles" ADD CONSTRAINT "user_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "access"."roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schedules" ADD CONSTRAINT "schedules_route_id_fkey" FOREIGN KEY ("route_id") REFERENCES "routes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "fleet"."schedules" ADD CONSTRAINT "schedules_route_id_fkey" FOREIGN KEY ("route_id") REFERENCES "fleet"."routes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schedules" ADD CONSTRAINT "schedules_bus_id_fkey" FOREIGN KEY ("bus_id") REFERENCES "buses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "fleet"."schedules" ADD CONSTRAINT "schedules_bus_id_fkey" FOREIGN KEY ("bus_id") REFERENCES "fleet"."buses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "schedules" ADD CONSTRAINT "schedules_driver_id_fkey" FOREIGN KEY ("driver_id") REFERENCES "drivers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "fleet"."schedules" ADD CONSTRAINT "schedules_driver_id_fkey" FOREIGN KEY ("driver_id") REFERENCES "fleet"."drivers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "sales" ADD CONSTRAINT "sales_sold_by_user_id_fkey" FOREIGN KEY ("sold_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "sales"."sales" ADD CONSTRAINT "sales_sold_by_user_id_fkey" FOREIGN KEY ("sold_by_user_id") REFERENCES "access"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "sales" ADD CONSTRAINT "sales_passenger_id_fkey" FOREIGN KEY ("passenger_id") REFERENCES "passengers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "sales"."sales" ADD CONSTRAINT "sales_passenger_id_fkey" FOREIGN KEY ("passenger_id") REFERENCES "customer"."passengers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tickets" ADD CONSTRAINT "tickets_sale_id_fkey" FOREIGN KEY ("sale_id") REFERENCES "sales"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "sales"."tickets" ADD CONSTRAINT "tickets_sale_id_fkey" FOREIGN KEY ("sale_id") REFERENCES "sales"."sales"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tickets" ADD CONSTRAINT "tickets_schedule_id_fkey" FOREIGN KEY ("schedule_id") REFERENCES "schedules"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "sales"."tickets" ADD CONSTRAINT "tickets_schedule_id_fkey" FOREIGN KEY ("schedule_id") REFERENCES "fleet"."schedules"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tickets" ADD CONSTRAINT "tickets_passenger_id_fkey" FOREIGN KEY ("passenger_id") REFERENCES "passengers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "sales"."tickets" ADD CONSTRAINT "tickets_passenger_id_fkey" FOREIGN KEY ("passenger_id") REFERENCES "customer"."passengers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
