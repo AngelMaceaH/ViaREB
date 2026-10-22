@@ -63,8 +63,27 @@ npm run db:generate
 
 ## API
 
-- `GET /api/health` — API and database connectivity check
+- `GET /api/health` — API and database connectivity check (público)
 - `GET /docs` — Swagger UI (OpenAPI)
+- **Autenticación JWT** — el resto de `/api/*` exige `Authorization: Bearer <token>`
+
+### Autenticación
+
+| Endpoint | Descripción |
+|----------|-------------|
+| `POST /api/auth/login` | Body `{ "email", "password" }` → `accessToken` |
+| `GET /api/auth/me` | Usuario actual (requiere Bearer) |
+
+Variables en `.env`: `JWT_SECRET` (obligatorio en producción), `JWT_EXPIRES_IN` (default `8h`).
+
+Tras `npm run db:seed`, usuarios demo:
+
+| Correo | Contraseña | Rol |
+|--------|------------|-----|
+| `admin@viareb.local` | `Admin123!` | ADMIN |
+| `cajero@viareb.local` | `Cajero123!` | CAJERO |
+
+El JWT incluye `roles` y `permissions` (códigos como `sales.manage`). Para restringir un endpoint concreto usa `preHandler: [requirePermission('access.manage')]` desde `infrastructure/security/require_permission.js`.
 
 ### Reportes (Business Intelligence)
 
@@ -112,7 +131,7 @@ Parámetros comunes: `desde` y `hasta` (YYYY-MM-DD), `limite`, `semanas`, `meses
 | `roles` | GET | GET | POST | PATCH | DELETE |
 | `permissions` | GET | GET | POST | PATCH | DELETE |
 
-Assignments (no auth middleware yet):
+Assignments:
 
 - `POST /api/access/users/:userId/roles/:roleId`
 - `DELETE /api/access/users/:userId/roles/:roleId`

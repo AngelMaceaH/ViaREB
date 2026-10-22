@@ -1,3 +1,4 @@
+const { registerAuthRoutes } = require('../modules/acceso/autenticacion/rutas_autenticacion')
 const { registerPermissionRoutes } = require('../modules/acceso/permisos/rutas_permiso')
 const { registerRoleRoutes } = require('../modules/acceso/roles/rutas_rol')
 const { registerUserRoutes } = require('../modules/acceso/usuarios/rutas_usuario')
@@ -11,6 +12,8 @@ const { registerSaleRoutes } = require('../modules/ventas/ventas/rutas_venta')
 const { registerTicketRoutes } = require('../modules/ventas/boletos/rutas_boleto')
 
 async function registerApplicationRoutes(application) {
+  await registerAuthRoutes(application)
+
   await registerTicketRoutes(application)
   await registerSaleRoutes(application)
   await registerReportRoutes(application)

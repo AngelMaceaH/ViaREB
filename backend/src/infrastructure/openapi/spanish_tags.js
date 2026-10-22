@@ -18,8 +18,12 @@ const swaggerTagDefinitions = [
     description: 'Pasajeros registrados en el sistema.',
   },
   {
+    name: 'Autenticación',
+    description: 'Inicio de sesión JWT y consulta de la sesión actual.',
+  },
+  {
     name: 'Acceso',
-    description: 'Usuarios, roles y permisos (sin autenticación JWT por ahora).',
+    description: 'Usuarios, roles y permisos (requieren JWT).',
   },
   {
     name: 'Sistema',
@@ -32,6 +36,7 @@ const spanishTags = {
   REPORTES: 'Reportes',
   FLOTA: 'Flota',
   CLIENTES: 'Clientes',
+  AUTENTICACION: 'Autenticación',
   ACCESO: 'Acceso',
   SISTEMA: 'Sistema',
 }

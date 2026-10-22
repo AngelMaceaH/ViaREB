@@ -17,11 +17,12 @@ const {
 } = require('./infrastructure/database/prisma_client')
 const { registerOpenApi } = require('./infrastructure/openapi/register_openapi')
 const { spanishTags } = require('./infrastructure/openapi/spanish_tags')
+const { registerJwtAuth } = require('./infrastructure/security/register_jwt_auth')
 const { registerApplicationRoutes } = require('./routes/register_application_routes')
 
 const environmentSchema = {
   type: 'object',
-  required: ['DATABASE_URL'],
+  required: ['DATABASE_URL', 'JWT_SECRET'],
   properties: {
     DATABASE_URL: {
       type: 'string',
@@ -30,6 +31,11 @@ const environmentSchema = {
     NODE_ENV: { type: 'string', default: 'development' },
     PORT: { type: 'string', default: '8000' },
     CORS_ORIGIN: { type: 'string', default: 'http://localhost:5173' },
+    JWT_SECRET: {
+      type: 'string',
+      default: 'viareb-dev-jwt-secret-change-in-production',
+    },
+    JWT_EXPIRES_IN: { type: 'string', default: '8h' },
   },
 }
 
@@ -56,10 +62,13 @@ async function start() {
     serverUrl: `http://localhost:${serverPort}`,
   })
 
+  await registerJwtAuth(application)
+
   await registerApplicationRoutes(application)
 
   application.get('/api/health', {
     schema: {
+      security: [],
       tags: [spanishTags.SISTEMA],
       summary: 'Estado del servicio',
       description: 'Comprueba que la API responde y que la base de datos está accesible.',

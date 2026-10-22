@@ -9,4 +9,27 @@ async function hashPassword(plainPassword) {
   return `scrypt:${salt}:${derivedKey.toString('hex')}`
 }
 
-module.exports = { hashPassword }
+async function verifyPassword(plainPassword, storedHash) {
+  if (!storedHash || !storedHash.startsWith('scrypt:')) {
+    return false
+  }
+
+  const [, salt, expectedHex] = storedHash.split(':')
+  if (!salt || !expectedHex) {
+    return false
+  }
+
+  const derivedKey = await scryptAsync(plainPassword, salt, 64)
+  const actualHex = derivedKey.toString('hex')
+
+  const expectedBuffer = Buffer.from(expectedHex, 'hex')
+  const actualBuffer = Buffer.from(actualHex, 'hex')
+
+  if (expectedBuffer.length !== actualBuffer.length) {
+    return false
+  }
+
+  return crypto.timingSafeEqual(expectedBuffer, actualBuffer)
+}
+
+module.exports = { hashPassword, verifyPassword }

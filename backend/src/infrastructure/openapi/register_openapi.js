@@ -15,6 +15,17 @@ async function registerOpenApi(application, options = {}) {
         version: '1.0.0',
       },
       tags: swaggerTagDefinitions,
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            description: 'Token obtenido con POST /api/auth/login',
+          },
+        },
+      },
+      security: [{ bearerAuth: [] }],
       servers: [
         {
           url: serverUrl,

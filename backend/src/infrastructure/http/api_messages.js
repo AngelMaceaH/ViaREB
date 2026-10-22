@@ -19,6 +19,9 @@ const apiMessages = {
   permissionCodeExists: 'Ya existe un permiso con ese código.',
   saleNotFound: 'Venta no encontrada.',
   ticketNotFound: 'Boleto no encontrado.',
+  invalidCredentials: 'Correo o contraseña incorrectos.',
+  unauthorized: 'No autenticado o token inválido.',
+  forbidden: 'No tiene permiso para esta operación.',
 }
 
 module.exports = { apiMessages }
