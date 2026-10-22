@@ -16,6 +16,7 @@ const {
   getPrismaClient,
 } = require('./infrastructure/database/prisma_client')
 const { registerOpenApi } = require('./infrastructure/openapi/register_openapi')
+const { spanishTags } = require('./infrastructure/openapi/spanish_tags')
 const { registerApplicationRoutes } = require('./routes/register_application_routes')
 
 const environmentSchema = {
@@ -59,17 +60,20 @@ async function start() {
 
   application.get('/api/health', {
     schema: {
-      tags: ['System'],
-      summary: 'Health check',
-      description: 'Verifies API availability and database connectivity.',
+      tags: [spanishTags.SISTEMA],
+      summary: 'Estado del servicio',
+      description: 'Comprueba que la API responde y que la base de datos está accesible.',
       response: {
         200: {
           type: 'object',
           required: ['status', 'message', 'database'],
           properties: {
             status: { type: 'string', example: 'ok' },
-            message: { type: 'string', example: 'ViaREB API is running' },
-            database: { type: 'string', example: 'connected' },
+            message: {
+              type: 'string',
+              example: 'La API ViaREB está en ejecución',
+            },
+            database: { type: 'string', example: 'conectada' },
           },
         },
       },
@@ -80,8 +84,8 @@ async function start() {
 
     return {
       status: 'ok',
-      message: 'ViaREB API is running',
-      database: 'connected',
+      message: 'La API ViaREB está en ejecución',
+      database: 'conectada',
     }
   })
 

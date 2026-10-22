@@ -65,19 +65,83 @@ npm run db:generate
 
 - `GET /api/health` — API and database connectivity check
 - `GET /docs` — Swagger UI (OpenAPI)
-- `GET /api/fleet/buses` — List buses (reference module)
-- `POST /api/fleet/buses` — Create bus
-- `GET /api/sales/tickets` — List tickets with passenger and route labels
+
+### Reportes (Business Intelligence)
+
+Parámetros comunes: `desde` y `hasta` (YYYY-MM-DD), `limite`, `semanas`, `meses`.
+
+| Endpoint | Descripción |
+|----------|-------------|
+| `GET /api/reports/panel` | Panel ejecutivo consolidado |
+| `GET /api/reports/indicadores` | KPIs principales |
+| `GET /api/reports/ventas/resumen` | Totales y promedios por período |
+| `GET /api/reports/ventas/diarias` | Serie diaria de ventas |
+| `GET /api/reports/ventas/semanales` | Ventas por semana |
+| `GET /api/reports/ventas/mensuales` | Ventas por mes |
+| `GET /api/reports/ventas/por-ruta` | Ingresos por ruta |
+| `GET /api/reports/ventas/por-cajero` | Ingresos por usuario cajero |
+| `GET /api/reports/ventas/ultimas` | Tabla de ventas recientes |
+| `GET /api/reports/boletos/por-estado` | Gráfico de estados |
+| `GET /api/reports/boletos/validacion` | Tasa de validación |
+| `GET /api/reports/boletos/tendencia` | Emisión diaria de boletos |
+| `GET /api/reports/flota/resumen` | Estado de flota |
+| `GET /api/reports/flota/demanda-por-ruta` | Demanda relativa por ruta |
+| `GET /api/reports/horarios/proximas-salidas` | Próximas salidas |
+| `GET /api/reports/pasajeros/resumen` | Altas y pasajeros frecuentes |
+
+### Fleet (`/api/fleet/...`)
+
+| Recurso | Listar | Consultar | Crear | Actualizar | Eliminar |
+|---------|--------|-----------|-------|------------|----------|
+| `buses` | GET | GET | POST | PATCH | DELETE |
+| `routes` | GET | GET | POST | PATCH | DELETE |
+| `drivers` | GET | GET | POST | PATCH | DELETE |
+| `schedules` | GET | GET | POST | PATCH | DELETE |
+
+### Customer
+
+| Recurso | Listar | Consultar | Crear | Actualizar | Eliminar |
+|---------|--------|-----------|-------|------------|----------|
+| `passengers` (`/api/customer/passengers`) | GET | GET | POST | PATCH | DELETE |
+
+### Access (`/api/access/...`)
+
+| Recurso | Listar | Consultar | Crear | Actualizar | Eliminar |
+|---------|--------|-----------|-------|------------|----------|
+| `users` | GET | GET | POST | PATCH | DELETE |
+| `roles` | GET | GET | POST | PATCH | DELETE |
+| `permissions` | GET | GET | POST | PATCH | DELETE |
+
+Assignments (no auth middleware yet):
+
+- `POST /api/access/users/:userId/roles/:roleId`
+- `DELETE /api/access/users/:userId/roles/:roleId`
+- `POST /api/access/roles/:roleId/permissions/:permissionId`
+- `DELETE /api/access/roles/:roleId/permissions/:permissionId`
+
+User create/update accepts `password` (stored hashed with scrypt). Responses never include password hashes.
+
+### Sales (`/api/sales/...`)
+
+| Endpoint | Métodos | Descripción |
+|----------|---------|-------------|
+| `/api/sales` | GET, POST | Listar ventas; crear venta con `tickets[]` |
+| `/api/sales/:id` | GET, PATCH, DELETE | Detalle; actualizar pasajero; eliminar venta (cascada boletos) |
+| `/api/sales/tickets` | GET | Listar boletos |
+| `/api/sales/tickets/code/:ticketCode` | GET | Buscar por código (validación) |
+| `/api/sales/tickets/:id` | GET, PATCH, DELETE | Detalle; cambiar `status`; eliminar boleto |
+
+La documentación interactiva en `/docs` está en **español** (resúmenes, descripciones y mensajes de error). El orden de grupos en Swagger: **Ventas → Reportes → Flota → Clientes → Acceso → Sistema**. Dentro de cada módulo: listar → crear → consultar → actualizar → eliminar.
 
 ## Adding a new route module
 
-1. Create a folder under `src/modules/<domain>/<resource>/` (example: `src/modules/fleet/routes/`).
-2. Add JSON schemas for Fastify in `*_schemas.js` (body, params, response) and include OpenAPI `tags`.
-3. Implement handlers in `*_routes.js` using `getPrismaClient()` from `src/infrastructure/database/prisma_client.js`.
-4. Export `register<Resource>Routes(application)` and call it from `src/routes/register_application_routes.js`.
-5. Add a matching tag in `src/infrastructure/openapi/register_openapi.js` if you introduce a new API group.
+1. Crear carpeta en `src/modules/<dominio>/<recurso>/` (ejemplo: `src/modules/flota/trayectos/`).
+2. Esquemas Fastify en `esquemas_<recurso>.js` (body, params, response) con tag OpenAPI en español.
+3. Handlers en `rutas_<recurso>.js` usando `getPrismaClient()` desde `src/infrastructure/database/prisma_client.js`.
+4. Registrar en `src/routes/register_application_routes.js`.
+5. Si aplica, agregar etiqueta en `src/infrastructure/openapi/spanish_tags.js`.
 
-The **buses** module is the copy-paste reference for the team.
+El módulo de referencia es **autobuses** (`src/modules/flota/autobuses/`).
 
 ### Optional demo data
 

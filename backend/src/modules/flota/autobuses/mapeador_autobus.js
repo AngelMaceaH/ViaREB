@@ -1,3 +1,5 @@
+const { serializeDateTime } = require('../../../infrastructure/http/serialization')
+
 function serializeBus(busRecord) {
   return {
     id: busRecord.id,
@@ -5,8 +7,8 @@ function serializeBus(busRecord) {
     capacity: busRecord.capacity,
     modelName: busRecord.modelName,
     isActive: busRecord.isActive,
-    createdAt: busRecord.createdAt.toISOString(),
-    updatedAt: busRecord.updatedAt.toISOString(),
+    createdAt: serializeDateTime(busRecord.createdAt),
+    updatedAt: serializeDateTime(busRecord.updatedAt),
   }
 }
 
