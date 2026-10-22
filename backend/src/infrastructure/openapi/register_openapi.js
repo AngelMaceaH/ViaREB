@@ -1,5 +1,6 @@
 const swaggerPlugin = require('@fastify/swagger')
 const swaggerUiPlugin = require('@fastify/swagger-ui')
+const { swaggerTagDefinitions } = require('./spanish_tags')
 
 async function registerOpenApi(application, options = {}) {
   const serverPort = options.serverPort ?? 8000
@@ -10,16 +11,25 @@ async function registerOpenApi(application, options = {}) {
       info: {
         title: 'ViaREB API',
         description:
-          'REST API for bus ticket sales and validation (USAP).',
+          'API REST para venta y validación de boletos de autobús (USAP). Documentación en español.',
         version: '1.0.0',
       },
-      tags: [
-        { name: 'System', description: 'Health and operational endpoints' },
-      ],
+      tags: swaggerTagDefinitions,
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            description: 'Token obtenido con POST /api/auth/login',
+          },
+        },
+      },
+      security: [{ bearerAuth: [] }],
       servers: [
         {
           url: serverUrl,
-          description: 'Current server',
+          description: 'Servidor actual',
         },
       ],
     },

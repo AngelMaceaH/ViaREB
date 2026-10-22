@@ -1,21 +1,41 @@
+const path = require('node:path')
+
+require('dotenv').config({
+  path: path.join(__dirname, '..', '.env'),
+})
+
 const Fastify = require('fastify')
 const cors = require('@fastify/cors')
 const envPlugin = require('@fastify/env')
+
+const defaultLocalDatabaseUrl =
+  'postgresql://viareb:viareb_local@127.0.0.1:5434/viareb?schema=public'
 const {
   createPrismaClient,
   disconnectPrismaClient,
   getPrismaClient,
 } = require('./infrastructure/database/prisma_client')
 const { registerOpenApi } = require('./infrastructure/openapi/register_openapi')
+const { spanishTags } = require('./infrastructure/openapi/spanish_tags')
+const { registerJwtAuth } = require('./infrastructure/security/register_jwt_auth')
+const { registerApplicationRoutes } = require('./routes/register_application_routes')
 
 const environmentSchema = {
   type: 'object',
-  required: ['DATABASE_URL'],
+  required: ['DATABASE_URL', 'JWT_SECRET'],
   properties: {
-    DATABASE_URL: { type: 'string' },
+    DATABASE_URL: {
+      type: 'string',
+      default: defaultLocalDatabaseUrl,
+    },
     NODE_ENV: { type: 'string', default: 'development' },
     PORT: { type: 'string', default: '8000' },
     CORS_ORIGIN: { type: 'string', default: 'http://localhost:5173' },
+    JWT_SECRET: {
+      type: 'string',
+      default: 'viareb-dev-jwt-secret-change-in-production',
+    },
+    JWT_EXPIRES_IN: { type: 'string', default: '8h' },
   },
 }
 
@@ -42,19 +62,27 @@ async function start() {
     serverUrl: `http://localhost:${serverPort}`,
   })
 
+  await registerJwtAuth(application)
+
+  await registerApplicationRoutes(application)
+
   application.get('/api/health', {
     schema: {
-      tags: ['System'],
-      summary: 'Health check',
-      description: 'Verifies API availability and database connectivity.',
+      security: [],
+      tags: [spanishTags.SISTEMA],
+      summary: 'Estado del servicio',
+      description: 'Comprueba que la API responde y que la base de datos está accesible.',
       response: {
         200: {
           type: 'object',
           required: ['status', 'message', 'database'],
           properties: {
             status: { type: 'string', example: 'ok' },
-            message: { type: 'string', example: 'ViaREB API is running' },
-            database: { type: 'string', example: 'connected' },
+            message: {
+              type: 'string',
+              example: 'La API ViaREB está en ejecución',
+            },
+            database: { type: 'string', example: 'conectada' },
           },
         },
       },
@@ -65,8 +93,8 @@ async function start() {
 
     return {
       status: 'ok',
-      message: 'ViaREB API is running',
-      database: 'connected',
+      message: 'La API ViaREB está en ejecución',
+      database: 'conectada',
     }
   })
 
