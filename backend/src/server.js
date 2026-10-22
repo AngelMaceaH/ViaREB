@@ -1,18 +1,31 @@
+const path = require('node:path')
+
+require('dotenv').config({
+  path: path.join(__dirname, '..', '.env'),
+})
+
 const Fastify = require('fastify')
 const cors = require('@fastify/cors')
 const envPlugin = require('@fastify/env')
+
+const defaultLocalDatabaseUrl =
+  'postgresql://viareb:viareb_local@127.0.0.1:5434/viareb?schema=public'
 const {
   createPrismaClient,
   disconnectPrismaClient,
   getPrismaClient,
 } = require('./infrastructure/database/prisma_client')
 const { registerOpenApi } = require('./infrastructure/openapi/register_openapi')
+const { registerApplicationRoutes } = require('./routes/register_application_routes')
 
 const environmentSchema = {
   type: 'object',
   required: ['DATABASE_URL'],
   properties: {
-    DATABASE_URL: { type: 'string' },
+    DATABASE_URL: {
+      type: 'string',
+      default: defaultLocalDatabaseUrl,
+    },
     NODE_ENV: { type: 'string', default: 'development' },
     PORT: { type: 'string', default: '8000' },
     CORS_ORIGIN: { type: 'string', default: 'http://localhost:5173' },
@@ -41,6 +54,8 @@ async function start() {
     serverPort,
     serverUrl: `http://localhost:${serverPort}`,
   })
+
+  await registerApplicationRoutes(application)
 
   application.get('/api/health', {
     schema: {

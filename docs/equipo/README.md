@@ -19,7 +19,7 @@ Proyecto USAP: venta y validación de boletos de autobús.
 
 1. Todos pueden levantar el proyecto con Docker.
 2. Cada integrante entrega **su pantalla** con tabla, estados vacíos/errores y formulario básico.
-3. Cuando Ángel publique el **patrón de API** (`GET` lista + `POST` crear), cada uno conecta su módulo a la API real.
+3. El **patrón de API** ya está en `backend/src/modules/fleet/buses/` (`GET` lista, `GET` por id, `POST` crear) y `frontend/src/lib/apiClient.js`. Cada integrante puede copiar ese módulo y conectar su pantalla.
 4. Hasta entonces se puede usar **datos mock** en un archivo `frontend/src/data/mock*.js` (como el Panel).
 
 ## Orden sugerido (dependencias)

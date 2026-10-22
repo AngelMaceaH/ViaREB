@@ -15,6 +15,8 @@ async function registerOpenApi(application, options = {}) {
       },
       tags: [
         { name: 'System', description: 'Health and operational endpoints' },
+        { name: 'Fleet', description: 'Buses, routes, drivers, schedules' },
+        { name: 'Sales', description: 'Sales and tickets' },
       ],
       servers: [
         {

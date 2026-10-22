@@ -10,22 +10,22 @@ Dejar la **base del backend** lista para que el equipo pueda copiar el mismo pat
 
 ### A. Infraestructura API (prioridad alta)
 
-- [ ] Crear estructura en `backend/src/` (ej. `routes/`, `modules/` o `features/`) para registrar rutas por dominio.
-- [ ] Implementar **un módulo de referencia completo** (recomendado: `fleet/buses`): `GET /api/fleet/buses`, `GET /api/fleet/buses/:id`, `POST /api/fleet/buses`.
-- [ ] Validación de body con esquemas Fastify (mismos campos que `Bus` en Prisma).
-- [ ] Documentar en comentario o `backend/README.md` cómo registrar una ruta nueva.
-- [ ] (Opcional) Script de seed con datos de prueba para horarios y ventas.
+- [x] Crear estructura en `backend/src/` (ej. `routes/`, `modules/` o `features/`) para registrar rutas por dominio.
+- [x] Implementar **un módulo de referencia completo** (recomendado: `fleet/buses`): `GET /api/fleet/buses`, `GET /api/fleet/buses/:id`, `POST /api/fleet/buses`.
+- [x] Validación de body con esquemas Fastify (mismos campos que `Bus` en Prisma).
+- [x] Documentar en comentario o `backend/README.md` cómo registrar una ruta nueva.
+- [x] (Opcional) Script de seed con datos de prueba para horarios y ventas.
 
 ### B. Frontend compartido
 
-- [ ] Crear componentes reutilizables si hace falta: `DataTable`, `PageHeader`, `Modal`, `LoadingState`, `ErrorState` en `frontend/src/components/`.
-- [ ] Crear `frontend/src/lib/apiClient.js` (fetch a `/api/...` vía proxy de nginx en Docker).
+- [x] Crear componentes reutilizables si hace falta: `DataTable`, `PageHeader`, `Modal`, `LoadingState`, `ErrorState` en `frontend/src/components/`.
+- [x] Crear `frontend/src/lib/apiClient.js` (fetch a `/api/...` vía proxy de nginx en Docker).
 
 ### C. Ventas (esqueleto Fase 1)
 
-- [ ] `frontend/src/pages/sales/SalesPage.jsx`: layout con pasos o formulario simple (mock).
-- [ ] `frontend/src/pages/sales/TicketsPage.jsx`: tabla de boletos con columnas: código, pasajero, ruta, estado, precio.
-- [ ] Endpoints mínimos cuando existan dependencias: listar tickets `GET /api/sales/tickets`.
+- [x] `frontend/src/pages/sales/SalesPage.jsx`: layout con pasos o formulario simple (mock).
+- [x] `frontend/src/pages/sales/TicketsPage.jsx`: tabla de boletos con columnas: código, pasajero, ruta, estado, precio.
+- [x] Endpoints mínimos cuando existan dependencias: listar tickets `GET /api/sales/tickets`.
 
 ### D. Coordinación
 
