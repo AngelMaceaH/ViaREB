@@ -1,3 +1,5 @@
+import { clearAccessToken, getAccessToken } from './authStorage'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 export class ApiError extends Error {
@@ -10,10 +12,17 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest(path, options = {}) {
-  const { headers, body, ...restOptions } = options
+  const { headers, body, skipAuth = false, ...restOptions } = options
   const requestHeaders = {
     Accept: 'application/json',
     ...headers,
+  }
+
+  if (!skipAuth) {
+    const accessToken = getAccessToken()
+    if (accessToken) {
+      requestHeaders.Authorization = `Bearer ${accessToken}`
+    }
   }
 
   const hasJsonBody = body !== undefined && body !== null
@@ -38,6 +47,16 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      !skipAuth &&
+      typeof window !== 'undefined' &&
+      !window.location.pathname.startsWith('/login')
+    ) {
+      clearAccessToken()
+      window.location.assign('/login')
+    }
+
     const errorMessage =
       typeof responseBody === 'object' && responseBody?.message
         ? responseBody.message
@@ -47,6 +66,19 @@ export async function apiRequest(path, options = {}) {
   }
 
   return responseBody
+}
+
+export const authApi = {
+  login(credentials) {
+    return apiRequest('/api/auth/login', {
+      method: 'POST',
+      body: credentials,
+      skipAuth: true,
+    })
+  },
+  getCurrentUser() {
+    return apiRequest('/api/auth/me')
+  },
 }
 
 export const fleetApi = {

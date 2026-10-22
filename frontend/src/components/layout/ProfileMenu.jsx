@@ -1,8 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 import { classNames } from '../../lib/classNames'
 
+function getInitials(fullName) {
+  if (!fullName) {
+    return '??'
+  }
+
+  const parts = fullName.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) {
+    return '??'
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase()
+  }
+
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+}
+
 export function ProfileMenu() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const menuContainerReference = useRef(null)
 
@@ -38,7 +59,13 @@ export function ProfileMenu() {
 
   function handleLogoutClick() {
     setIsOpen(false)
+    logout()
+    navigate('/login', { replace: true })
   }
+
+  const displayName = user?.fullName ?? 'Usuario'
+  const displayEmail = user?.email ?? ''
+  const initials = getInitials(user?.fullName)
 
   return (
     <div className="relative" ref={menuContainerReference}>
@@ -50,11 +77,11 @@ export function ProfileMenu() {
         aria-haspopup="menu"
       >
         <span className="flex size-8 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
-          AD
+          {initials}
         </span>
         <div className="hidden text-xs sm:block">
-          <p className="font-medium text-slate-700">Administrador</p>
-          <p className="text-slate-500">Sesión local</p>
+          <p className="font-medium text-slate-700">{displayName}</p>
+          <p className="text-slate-500">{displayEmail}</p>
         </div>
         <ChevronDown
           className={classNames(
