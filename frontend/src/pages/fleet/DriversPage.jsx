@@ -231,4 +231,16 @@ export function DriversPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </EmptyPage>
+  );
+}
